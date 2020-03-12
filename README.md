@@ -17,5 +17,5 @@ All other fields can be flexible and do not have to be the same across Experts. 
 *expert-list*	- lists all experts the Experts service
 *expert-remove*	- deletes the expert identified by her phone number from the Experts service
 *expert-table-create*	- creates a new Expert service and if already exists returns the SID of the service
-*expert-table-delete*	- destroys the Experts Service inside the given Sync instance
+*expert-table-delete*	- destroys the Experts Service inside the given Sync instance 
 *expert-update* - updates the the JSON object related to a given experts identified by her phone number
