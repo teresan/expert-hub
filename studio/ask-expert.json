@@ -1,0 +1,169 @@
+{
+    "description": "A New Flow",
+    "states": [
+      {
+        "name": "Trigger",
+        "type": "trigger",
+        "transitions": [
+          {
+            "next": "Welcome",
+            "event": "incomingMessage"
+          },
+          {
+            "event": "incomingCall"
+          },
+          {
+            "event": "incomingRequest"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      },
+      {
+        "name": "Welcome",
+        "type": "send-and-wait-for-reply",
+        "transitions": [
+          {
+            "next": "ProcessTopics",
+            "event": "incomingMessage"
+          },
+          {
+            "event": "timeout"
+          },
+          {
+            "event": "deliveryFailure"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": -70,
+            "y": 230
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "{{flow.channel.address}}",
+          "body": "Welcome to the Expert Hub! Which topic do you need help with?",
+          "timeout": 3600
+        }
+      },
+      {
+        "name": "ProcessTopics",
+        "type": "run-function",
+        "transitions": [
+          {
+            "next": "AskQuestion",
+            "event": "success"
+          },
+          {
+            "event": "fail"
+          }
+        ],
+        "properties": {
+          "service_sid": "default",
+          "offset": {
+            "x": 180,
+            "y": 490
+          },
+          "parameters": [
+            {
+              "value": "{{widgets.Welcome.inbound.Body}}",
+              "key": "keywords"
+            }
+          ],
+          "url": "https://eggplant-umbrellabird-4183.twil.io/listTopics"
+        }
+      },
+      {
+        "name": "AskQuestion",
+        "type": "send-and-wait-for-reply",
+        "transitions": [
+          {
+            "next": "ConnectToExpert",
+            "event": "incomingMessage"
+          },
+          {
+            "event": "timeout"
+          },
+          {
+            "event": "deliveryFailure"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 390,
+            "y": 750
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "{{flow.channel.address}}",
+          "body": "That's great. We can help you with {{widgets.ProcessTopics.body}} . What is your question?",
+          "timeout": 3600
+        }
+      },
+      {
+        "name": "FindExpert",
+        "type": "run-function",
+        "transitions": [
+          {
+            "event": "success"
+          },
+          {
+            "event": "fail"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 850,
+            "y": 1270
+          },
+          "parameters": [
+            {
+              "value": "{{widgets.ProcessTopics.parsed}}",
+              "key": "topics"
+            },
+            {
+              "value": "{{widgets.AskQuestion.outbound.Body}}",
+              "key": "question"
+            },
+            {
+              "value": "{{trigger.message.ChannelSid}}",
+              "key": "channel"
+            }
+          ],
+          "url": "https://eggplant-umbrellabird-4183.twil.io/findExpert"
+        }
+      },
+      {
+        "name": "ConnectToExpert",
+        "type": "send-message",
+        "transitions": [
+          {
+            "next": "FindExpert",
+            "event": "sent"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 620,
+            "y": 1030
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "{{flow.channel.address}}",
+          "to": "{{contact.channel.address}}",
+          "body": "Please hold while I connect you to an expert."
+        }
+      }
+    ],
+    "initial_state": "Trigger",
+    "flags": {
+      "allow_concurrent_calls": true
+    }
+  }

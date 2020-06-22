@@ -1,0 +1,196 @@
+{
+    "description": "A New Flow",
+    "states": [
+      {
+        "name": "Trigger",
+        "type": "trigger",
+        "transitions": [
+          {
+            "next": "Welcome",
+            "event": "incomingMessage"
+          },
+          {
+            "event": "incomingCall"
+          },
+          {
+            "event": "incomingRequest"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      },
+      {
+        "name": "Welcome",
+        "type": "send-and-wait-for-reply",
+        "transitions": [
+          {
+            "next": "AskNumber",
+            "event": "incomingMessage"
+          },
+          {
+            "event": "timeout"
+          },
+          {
+            "event": "deliveryFailure"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": -20,
+            "y": 270
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "{{flow.channel.address}}",
+          "body": "Dear Expert, thanks for getting in touch.\n\nHow can I call you?\n(Please provide first and last name)",
+          "timeout": 3600
+        }
+      },
+      {
+        "name": "AskTopics",
+        "type": "send-and-wait-for-reply",
+        "transitions": [
+          {
+            "next": "ProcessTopics",
+            "event": "incomingMessage"
+          },
+          {
+            "event": "timeout"
+          },
+          {
+            "event": "deliveryFailure"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 560,
+            "y": 720
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "{{flow.channel.address}}",
+          "body": "Great! Now, tell me, which topics woud you like to support? \n(Split multiple topics by comma or space)",
+          "timeout": 3600
+        }
+      },
+      {
+        "name": "ProcessTopics",
+        "type": "run-function",
+        "transitions": [
+          {
+            "next": "PrepareExpertProfile",
+            "event": "success"
+          },
+          {
+            "event": "fail"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 220,
+            "y": 970
+          },
+          "parameters": [
+            {
+              "value": "{{widgets.AskTopics.inbound.Body}}",
+              "key": "keywords"
+            }
+          ],
+          "url": "https://eggplant-umbrellabird-4183.twil.io/listTopics"
+        }
+      },
+      {
+        "name": "AskNumber",
+        "type": "send-and-wait-for-reply",
+        "transitions": [
+          {
+            "next": "AskTopics",
+            "event": "incomingMessage"
+          },
+          {
+            "event": "timeout"
+          },
+          {
+            "event": "deliveryFailure"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 280,
+            "y": 470
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "{{flow.channel.address}}",
+          "body": "Welcome,{{widgets.Welcome.inbound.Body}}!\n\nCan you tell me what's your phone number? \n(Please provide '+' plus country code followed by your number)",
+          "timeout": 3600
+        }
+      },
+      {
+        "name": "PrepareExpertProfile",
+        "type": "run-function",
+        "transitions": [
+          {
+            "next": "Subscribed",
+            "event": "success"
+          },
+          {
+            "next": "Subscribed",
+            "event": "fail"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 500,
+            "y": 1190
+          },
+          "parameters": [
+            {
+              "value": "{{widgets.Welcome.inbound.Body}}",
+              "key": "name"
+            },
+            {
+              "value": "{{widgets.AskNumber.inbound.Body}}",
+              "key": "number"
+            },
+            {
+              "value": "{{widgets.ProcessTopics.body}}",
+              "key": "topics"
+            }
+          ],
+          "url": "https://eggplant-umbrellabird-4183.twil.io/buildExpert"
+        }
+      },
+      {
+        "name": "Subscribed",
+        "type": "send-message",
+        "transitions": [
+          {
+            "event": "sent"
+          },
+          {
+            "event": "failed"
+          }
+        ],
+        "properties": {
+          "offset": {
+            "x": 790,
+            "y": 1450
+          },
+          "service": "{{trigger.message.InstanceSid}}",
+          "channel": "{{trigger.message.ChannelSid}}",
+          "from": "{{flow.channel.address}}",
+          "to": "{{contact.channel.address}}",
+          "body": "Congratulations. You are now subscribed as an expert for {{widgets.PrepareExpertProfile.body}}.\n\nWe can't wait to see what you help to build!"
+        }
+      }
+    ],
+    "initial_state": "Trigger",
+    "flags": {
+      "allow_concurrent_calls": true
+    }
+  }
