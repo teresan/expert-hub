@@ -5,8 +5,8 @@ exports.handler = function(context, event, callback) {
  //what do we return???
  
  const sync_id = event['service'];
- const expert_json = event['expert'];
- const expert = JSON.parse(expert_json);
+ const expert_key = event['expert'];
+ 
  
  //HAPPY PATH
  
@@ -27,15 +27,16 @@ exports.handler = function(context, event, callback) {
             
  client.sync.services(sync_id)
            .syncMaps('experts')
-           .syncMapItems
-           .create({key: expert.number , data: expert_json })
+           .syncMapItems(expert_key)
+           .fetch()
            .then(sync_map_item => {
                console.log(sync_map_item.key)
-               callback(sync_map_item.key);
+               callback(null,JSON.stringify(sync_map_item.data));
                })
            .catch(e => { 
                console.log(e); 
-               callback(false);
+               callback(null,false);
                });
+              
  //callback(null, response);
 };

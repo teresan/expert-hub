@@ -30,12 +30,12 @@ exports.handler = function(context, event, callback) {
               console.log(s.key);
               array.push(s.data);
               })
-          callback(JSON.stringify(array));
+          callback(null,JSON.stringify(array));
           
       })
       .catch(e => { 
                console.log(e); 
-               callback(false);
+               callback(null,false);
                });
 
 };
